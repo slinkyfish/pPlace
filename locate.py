@@ -13,12 +13,13 @@ backlight = 4
 GPIO.setup(backlight, GPIO.OUT)
 
 ########### Initialise Serial Comms. with machine ###########
-#ser = serial.Serial('/dev/ttyUSB0', 115200)
-
+ser = serial.Serial('/dev/ttyUSB0', 115200)
+ser.write("G21\r\n")        #Use mm
+ser.write("G90\r\n")        #Use absolute coordinates
 ###########     Position camera over backlight   ###########
 #ser.write('G28\r\n')               ##comment out if camera is already in position
-#ser.write('G1 Z25 F5000\r\n')
-#ser.write('G1 X145 Y90 F9000\r\n')
+ser.write('G1 Z25 F5000\r\n')
+ser.write('G1 X145 Y90 F9000\r\n')
 
 ###########         Prepare Camera Settings       ###########
 camera = picamera.PiCamera()
@@ -71,26 +72,26 @@ ret, thresh = cv2.threshold(imgray, 127, 255, 0)
 im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
 ######### scroll through contours and find one of suitable size  #########
-drawID = 0
+
 for count in range(len(contours)):
+    drawID = ''
     area = cv2.contourArea(contours[count])
-    #print(area)                         #Display area of each contour found
-    if(area >3000 and area < 4000):
-        print "Model ID: 1"
+    print(area)                         #Display area of each contour found
+    if(area >3000 and area < 4100):      
+        drawID = '0805'
+    if(area >33000 and area < 36400):
+        drawID = 'IC'
+    if(area >1750 and area < 2100):
+        drawID = '0603'
+    if(area >7000 and area < 7500):
+        drawID = '1206'
+    if(drawID):
+        print "Model ID: " + str(drawID);
         print "Area: " + str(area)
-        chosen = count
         cnt = contours[count]
-        drawID = 1
-    if(area >33000 and area < 36000):
-        print "Model ID: 2"
-        print "Area: " + str(area)
-        chosen = count
-        cnt = contours[count]
-        drawID = 2
-    if(drawID <> 0):
 ######### approximate contour as polygon with 10% deviation  #########
 
-        epsilon = 0.005*cv2.arcLength(cnt, True)            #([contour], [closed contour(T/F)])
+        epsilon = 0.01*cv2.arcLength(cnt, True)            #([contour], [closed contour(T/F)])
         approx = cv2.approxPolyDP(cnt, epsilon, True)
 
 ######### approximate contour as bounding rectangle  #########
@@ -113,12 +114,10 @@ for count in range(len(contours)):
         print "\n"
         box =cv2.boxPoints(rect)
         box = np.int0(box)
-        if(drawID==1):
-            im = cv2.drawContours(im, [box], 0, (0, 0, 255), 2)
-        elif(drawID==2):
-            im = cv2.drawContours(im, [box], 0, (0, 255, 0), 2)
-        drawID = 0
-        im = cv2.circle(im, (xVal, yVal), 20, (0, 255, 0))
+        im = cv2.drawContours(im, [box], 0, (0, 0, 255), 2)
+        cv2.putText(im, ('ID: ' + drawID), (xVal+2, yVal-2), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 255, 0))
+
+       # im = cv2.circle(im, (xVal, yVal), 20, (0, 255, 0))
         im = cv2.line(im, (xVal-sinAngleVal, yVal-cosAngleVal), (xVal+sinAngleVal, yVal+cosAngleVal), (0, 0, 255))
         im = cv2.line(im, (xVal-cosAngleVal, yVal+sinAngleVal), (xVal+cosAngleVal, yVal-sinAngleVal), (0, 0, 255))
         im = cv2.line(im, (xVal-10, yVal), (xVal+10, yVal), (0, 255, 0))
