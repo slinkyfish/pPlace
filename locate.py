@@ -97,10 +97,13 @@ for count in range(len(contours)):
 ######### approximate contour as bounding rectangle  #########
         rect = cv2.minAreaRect(cnt)
         #print rect                  #holds ((x, y), (w, h), angle)
+        
         xVal = int(rect[0][0])
         yVal = int(rect[0][1])
         wVal = int(rect[1][0])
         hVal = int(rect[1][1])
+        error = abs((area-(wVal*hVal)))/(wVal*hVal) #amount of white as a fraction of the rectangle
+        score = round((1-error)*100, 2)
         angleVal = int(rect[2])
         sinAngleVal = int(10*math.sin(rect[2]*3.14159/180))
         cosAngleVal = int(10*math.cos(rect[2]*3.14159/180))
@@ -111,11 +114,14 @@ for count in range(len(contours)):
         print "angle: " + str(angleVal)
         print "10sinAngle: " + str(sinAngleVal)
         print "10cosAngle: " + str(cosAngleVal)
+        print "Error: " + str(error)
+        print "Score: " + str(score)
         print "\n"
         box =cv2.boxPoints(rect)
         box = np.int0(box)
         im = cv2.drawContours(im, [box], 0, (0, 0, 255), 2)
-        cv2.putText(im, ('ID: ' + drawID), (xVal+2, yVal-2), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 255, 0))
+        cv2.putText(im, ('ID: ' + drawID), (xVal+2, yVal-2), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 0, 0))
+        cv2.putText(im, ('Score: ' + str(score)), (xVal+2, yVal+12), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 0, 0))
 
        # im = cv2.circle(im, (xVal, yVal), 20, (0, 255, 0))
         im = cv2.line(im, (xVal-sinAngleVal, yVal-cosAngleVal), (xVal+sinAngleVal, yVal+cosAngleVal), (0, 0, 255))
