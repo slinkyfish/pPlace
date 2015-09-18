@@ -6,6 +6,8 @@ import serial
 import RPi.GPIO as GPIO
 import math
 
+component = {3780:'0805', 37200:'IC', 7080:'1206', 2022:'0603'}
+
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
@@ -76,15 +78,24 @@ im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APP
 for count in range(len(contours)):
     drawID = ''
     area = cv2.contourArea(contours[count])
-    print(area)                         #Display area of each contour found
-    if(area >3000 and area < 4100):      
+    if(area > 200):
+        print(area)                         #Display area of each contour found
+        #drawID = str(area);                #Uncomment to draw area onto all objects found
+
+    for i in range(len(component)):
+        if(area < component.keys()[i]* 1.1 and area > component.keys()[i]*0.9):       #within suitable bounds (10%)
+            print component[component.keys()[i]]
+            drawID = component[component.keys()[i]]
+
+    '''if(area >3000 and area < 4100):      
         drawID = '0805'
-    if(area >33000 and area < 36400):
+    if(area >33000 and area < 38400):
         drawID = 'IC'
     if(area >1750 and area < 2100):
         drawID = '0603'
     if(area >7000 and area < 7500):
         drawID = '1206'
+        '''
     if(drawID):
         print "Model ID: " + str(drawID);
         print "Area: " + str(area)
@@ -112,9 +123,9 @@ for count in range(len(contours)):
         print "w: " + str(wVal)
         print "h: " + str(hVal)
         print "angle: " + str(angleVal)
-        print "10sinAngle: " + str(sinAngleVal)
-        print "10cosAngle: " + str(cosAngleVal)
-        print "Error: " + str(error)
+        #print "10sinAngle: " + str(sinAngleVal)
+        #print "10cosAngle: " + str(cosAngleVal)
+        #print "Error: " + str(error)
         print "Score: " + str(score)
         print "\n"
         box =cv2.boxPoints(rect)
@@ -136,7 +147,9 @@ cv2.waitKey(0)
 cv2.imwrite('FoundImg.jpg', im)
 GPIO.cleanup()
 
-
+def boundaries(checkArea):
+    if(checkArea > check*0.9 and checkArea < check*1.1):
+        print "here"
 
 
 
